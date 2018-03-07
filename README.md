@@ -9,6 +9,8 @@ A simple library to provide tooling to allow access/login attempts to be fully l
 
 This library is designed to be used within a Rails application and uses ActiveRecord as a base.
 
+By default, users are blocked for 1 hour after 10 failed attempts.
+
 ## Installation
 
 ```ruby
@@ -27,14 +29,16 @@ $ rails db:migrate
 The library needs to be told whenever there is a login attempt for your application. The actual placement of such a method call will depend on your application.
 
 ```ruby
-# When a login attempt fails, you need to call the `failed` method.
-LogLogins.fail(user, :ip => request.ip, :user_agent => request.user_agent)
+def authenticate(username, password, ip)
+  # When a login attempt fails, you need to call the `failed` method.
+  LogLogins.fail(username, self, ip)
 
-# When a login attempt is successful, you need to call the `success` method.
-LogLogins.success(user, :ip => request.ip, :user_agent => request.user_agent)
+  # When a login attempt is successful, you need to call the `success` method.
+  LogLogins.success(username, self, ip)
+end
 ```
 
-If a login should not be permitted a `LogLogins::LoginBlocked` error will be raised from either `fail` or `success`. Remember, just because a login is successful, it doesn't mean it won't be blocked.
+If a login should not be permitted a `LogLogins::LoginBlocked` error will be raised from either `fail` or `success`. Remember, just because a login is successful, it doesn't mean it won't be blocked. This should be rescued in your controllers to present a suitable response to the blocked user.
 
 The user object passed to the `fail` or `success` objects must be instance of an ActiveRecord model (for example `User` or `APIToken`). It may also be a string for occasions when there's a login attempt for but there is no corresponding object in the database (for example, you may provide the raw `username` that was provided with the login attempt).
 
@@ -50,12 +54,38 @@ class User < ApplicationRecord
 end
 ```
 
-### E-Mailing when logins are blocked
+### Unblocking
 
-You can register event handlers on the global configuration which will be automatically invoked.
+You can use either of the two methods below to unblock users or IP addresses that get blocked.
+
+```ruby
+# To unblock a specific user account
+LogLogins.unblock_user(user)
+
+# To unblock an IP address
+LogLogins.unblock_ip('1.2.3.4')
+```
+
+## Configuration
+
+Some configuration options are available:
 
 ```ruby
 LogLogins.configure do |config|
+
+  # Set the name of the table where login events will be stored
+  config.events_table_name = 'login_events'
+
+  # Set the length of time blocks should remain in place (in seconds)
+  config.block_time = 1.hour
+
+  # Set the number of attempts allowed before blocking (if the user was found)
+  config.attempts_before_block = 10
+
+  # Set the number of attempts allowed before block (if no user is found, blocks the IP)
+  config.attempts_before_block_on_ip = 10
+
+  # You can also add callbacks here...
 
   config.on(:blocked) do |event|
     # Something to happen when logins are blocked... maybe send an email?
