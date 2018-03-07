@@ -12,8 +12,6 @@ class CreateLogLoginsEventsTable < ActiveRecord::Migration[4.2]
       t.string :ip          # 1.2.3.4
       t.string :user_agent
 
-      t.datetime :last_attempt_at
-
       t.datetime :created_at
 
       t.index [:user_type, :user_id], :length => {:user_type => 10}
