@@ -91,5 +91,16 @@ module LogLogins
       self.failed_in_block_time.where(:user => nil, :ip => ip.to_s).where("id > ?", last_success).count >= LogLogins.config.attempts_before_block_on_ip
     end
 
+    # Delete old login data
+    #
+    # @return [Integer] the number of removed items
+    def self.prune(max_age = 6.months)
+      if last_to_keep = self.where("created_at <= ?", max_age.ago).order(:created_at => :desc).first.try(:id)
+        self.where("id <= ?", last_to_keep).delete_all
+      else
+        0
+      end
+    end
+
   end
 end

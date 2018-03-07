@@ -126,5 +126,18 @@ describe LogLogins::Event do
     end
   end
 
+  context ".prune" do
+    it "should return 0 when no records to prune" do
+      expect(LogLogins::Event.prune).to eq 0
+    end
+
+    it "should return more than 0 when more to delete" do
+      allow(Time).to receive(:now).and_return(12.months.ago)
+      simulate_failed_logins(5, 'tester', user, '1.2.3.4')
+      allow(Time).to receive(:now).and_call_original
+      expect(LogLogins::Event.prune).to eq 5
+    end
+  end
+
 
 end
