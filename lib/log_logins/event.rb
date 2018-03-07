@@ -77,7 +77,7 @@ module LogLogins
     # @return [Boolean]
     def self.user_blocked?(user)
       return false unless user.is_a?(ActiveRecord::Base)
-      last_success = self.success_or_unblock.order(:id => :desc).select(:id).first.try(:id) || 0
+      last_success = self.where(:user => user).success_or_unblock.order(:id => :desc).select(:id).first.try(:id) || 0
       self.failed_in_block_time.where(:user => user).where("id > ?", last_success).count >= LogLogins.config.attempts_before_block
     end
 
@@ -87,7 +87,7 @@ module LogLogins
     # @return [Boolean]
     def self.ip_blocked?(ip)
       return false if ip.nil?
-      last_success = self.success_or_unblock.order(:id => :desc).select(:id).first.try(:id) || 0
+      last_success = self.where(:user => nil, :ip => ip.to_s).success_or_unblock.order(:id => :desc).select(:id).first.try(:id) || 0
       self.failed_in_block_time.where(:user => nil, :ip => ip.to_s).where("id > ?", last_success).count >= LogLogins.config.attempts_before_block_on_ip
     end
 

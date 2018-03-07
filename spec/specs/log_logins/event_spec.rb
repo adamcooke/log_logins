@@ -44,6 +44,17 @@ describe LogLogins::Event do
       LogLogins::Event.log('Success', 'tester', user, '1.2.3.4')
       expect(LogLogins::Event.user_blocked?(user)).to be false
     end
+
+    it "should work with multiple users" do
+      # Fail some logins
+      simulate_failed_logins(10, 'tester', user, '1.2.3.4')
+      expect(LogLogins::Event.user_blocked?(user)).to be true
+      # Have a successful login for another user
+      user2 = User.create!(:username => "tester2")
+      LogLogins::Event.log('Success', 'tester2', user2, '1.2.3.4')
+      # Make sure the original user is still blocked
+      expect(LogLogins::Event.user_blocked?(user)).to be true
+    end
   end
 
   context ".ip_blocked?" do
@@ -67,6 +78,17 @@ describe LogLogins::Event do
       5.times { LogLogins::Event.log('Failed', 'tester', nil, '1.2.3.4') }
       expect(LogLogins::Event.ip_blocked?('1.2.3.4')).to be false
     end
+
+    it "should work with multiple users" do
+      # Fail some logins
+      simulate_failed_logins(10, 'tester', nil, '1.2.3.4')
+      expect(LogLogins::Event.ip_blocked?('1.2.3.4')).to be true
+      # Have a successful login for another user
+      LogLogins::Event.log('Success', 'tester2', nil, '1.2.3.5')
+      # Make sure the original user is still blocked
+      expect(LogLogins::Event.ip_blocked?('1.2.3.4')).to be true
+    end
+
   end
 
   context "#previous" do
