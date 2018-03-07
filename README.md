@@ -1,5 +1,7 @@
 # Log Logins
 
+[![Build Status](https://travis-ci.org/adamcooke/log_logins.svg?branch=master)](https://travis-ci.org/adamcooke/log_logins) [![Gem Version](https://badge.fury.io/rb/log_logins.svg)](https://badge.fury.io/rb/log_logins)
+
 A simple library to provide tooling to allow access/login attempts to be fully logged and automatically blocked when there are too many failed login attempts.
 
 * Provide a full audit trail for login attempts to an application. Both user and API access attempts should be supported.
