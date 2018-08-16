@@ -36,6 +36,14 @@ module LogLogins
     Event.log('Unblocked', nil, nil, ip)
   end
 
+  def self.block_user(user)
+    Event.log('Blocked', nil, user, nil)
+  end
+
+  def self.block_ip(ip)
+    Event.log('Blocked', nil, nil, ip)
+  end
+
   private
 
   def self.blocked!(username, user, ip, options = {})
